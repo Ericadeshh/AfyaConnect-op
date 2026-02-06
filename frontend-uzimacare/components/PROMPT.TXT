@@ -1,0 +1,4264 @@
+I have some few files that I want to share with you, so that you can analyze my progress and help me proceed-but upon waiting my next set of instructions.
+
+Here are the files:
+
+App:
+
+src/pages.tsx:
+
+"use client";
+
+import { useState } from "react";
+import RoleSelector from "../components/auth/role-selector";
+import PhysicianLogin from "../components/auth/physician-login";
+import AdminLogin from "../components/auth/admin-login";
+import PhysicianDashboard from "../components/physician/dashboard";
+import AdminDashboard from "../components/admin/dashboard";
+import type { UserRole } from "../lib/types";
+
+type AppState = "role-select" | "login" | "dashboard";
+
+export default function Home() {
+  const [appState, setAppState] = useState<AppState>("role-select");
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [token, setToken] = useState<string | null>(null);
+
+  const handleRoleSelect = (role: UserRole) => {
+    setSelectedRole(role);
+    setAppState("login");
+  };
+
+  const handleLoginSuccess = (userData: any, authToken: string) => {
+    setUser(userData);
+    setToken(authToken);
+    setAppState("dashboard");
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setToken(null);
+    setSelectedRole(null);
+    setAppState("role-select");
+  };
+
+  if (appState === "role-select") {
+    return <RoleSelector onSelectRole={handleRoleSelect} />;
+  }
+
+  if (appState === "login") {
+    return (
+      <>
+        {selectedRole === "physician" && (
+          <PhysicianLogin onLoginSuccess={handleLoginSuccess} />
+        )}
+        {selectedRole === "admin" && (
+          <AdminLogin onLoginSuccess={handleLoginSuccess} />
+        )}
+      </>
+    );
+  }
+
+  if (appState === "dashboard" && user && token) {
+    return (
+      <>
+        {selectedRole === "physician" && (
+          <PhysicianDashboard
+            user={user}
+            token={token}
+            onLogout={handleLogout}
+          />
+        )}
+        {selectedRole === "admin" && (
+          <AdminDashboard user={user} token={token} onLogout={handleLogout} />
+        )}
+      </>
+    );
+  }
+
+  return null;
+}
+
+app/layout.tsx:
+
+import type React from "react";
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import "./globals.css";
+
+const _geist = Geist({ subsets: ["latin"] });
+const _geistMono = Geist_Mono({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: "Uzimacare - TB Patient Care Management",
+  description:
+    "Kenya healthcare application for TB patient management, inter-facility referrals, and mobile payments",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    userScalable: false,
+  },
+  generator: "v0.app",
+  icons: {
+    icon: [
+      {
+        url: "/icon-light-32x32.png",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/icon-dark-32x32.png",
+        media: "(prefers-color-scheme: dark)",
+      },
+      {
+        url: "/icon.svg",
+        type: "image/svg+xml",
+      },
+    ],
+    apple: "/apple-icon.png",
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body className={`font-sans antialiased min-h-screen`}>
+        {children}
+        <Analytics />
+      </body>
+    </html>
+  );
+}
+
+
+
+app/global.css:
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
+}
+
+@theme inline {
+  /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
+  --color-primary: #4c1d95; /* Deep Purple */
+  --color-primary-light: #6d28d9;
+  --color-accent: #0891b2; /* Teal */
+  --color-accent-light: #06b6d4;
+
+  /* Neutrals */
+  --color-background: #ffffff;
+  --color-surface: #f8fafc;
+  --color-border: #e2e8f0;
+  --color-text: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+
+  /* Status Colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  /* Semantic */
+  --color-background-hover: #f1f5f9;
+  --color-border-focus: #4c1d95;
+
+  --font-sans: "Inter", "System UI", sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  @apply w-2 h-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-surface;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-border rounded;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-text-muted;
+}
+
+/* Utility classes */
+.bg-primary {
+  @apply bg-[#4c1d95];
+}
+
+.bg-primary-light {
+  @apply bg-[#6d28d9];
+}
+
+.bg-accent {
+  @apply bg-[#0891b2];
+}
+
+.bg-accent-light {
+  @apply bg-[#06b6d4];
+}
+
+.text-primary {
+  @apply text-[#4c1d95];
+}
+
+.text-accent {
+  @apply text-[#0891b2];
+}
+
+.border-primary {
+  @apply border-[#4c1d95];
+}
+
+.btn-primary {
+  @apply px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-light transition-colors;
+}
+
+.btn-secondary {
+  @apply px-4 py-2 bg-surface text-text border border-border rounded-lg hover:bg-background-hover transition-colors;
+}
+
+.input-base {
+  @apply w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all;
+}
+
+.card {
+  @apply bg-background border border-border rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow;
+}
+
+
+
+
+components/admin:
+
+-calendar-view,
+
+import { Card } from "@/components/ui/card";
+
+export default function CalendarView() {
+  const daysInMonth = 30;
+  const startingDay = 2; // December 2024 starts on Wednesday
+
+  return (
+    <Card className="p-8">
+      <h2 className="text-2xl font-bold mb-6 text-warning">
+        Clinic Calendar - December 2024
+      </h2>
+
+      <div className="mb-6">
+        <div className="inline-block bg-surface px-4 py-2 rounded border border-border">
+          <select className="bg-transparent font-medium">
+            <option>TB Wing A - Nairobi Central Hospital</option>
+            <option>TB Wing B - Mombasa County Hospital</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-7 gap-2">
+        {/* Day headers */}
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+          <div key={day} className="text-center font-semibold p-2 text-primary">
+            {day}
+          </div>
+        ))}
+
+        {/* Empty cells for days before month starts */}
+        {Array.from({ length: startingDay }).map((_, i) => (
+          <div key={`empty-${i}`} className="h-20 bg-gray-100 rounded"></div>
+        ))}
+
+        {/* Calendar days */}
+        {Array.from({ length: daysInMonth }).map((_, i) => {
+          const day = i + 1;
+          const isToday = day === 3;
+          const bookingCount = [5, 3, 8, 2, 6][i % 5] || 0;
+
+          return (
+            <div
+              key={day}
+              className={`h-20 p-2 rounded border-2 transition-all hover:shadow-md ${
+                isToday
+                  ? "bg-primary text-white border-primary"
+                  : "bg-background border-border hover:border-primary"
+              }`}
+            >
+              <p className="font-semibold text-sm">{day}</p>
+              <p
+                className={`text-xs ${isToday ? "text-purple-100" : "text-text-secondary"}`}
+              >
+                {bookingCount} bookings
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-8 pt-6 border-t border-border">
+        <h3 className="font-semibold mb-4">Legend</h3>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-primary rounded"></div>
+            <span className="text-sm">Today</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-success rounded"></div>
+            <span className="text-sm">Fully Booked</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-warning rounded"></div>
+            <span className="text-sm">Nearly Full</span>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+
+-completed-referrals,
+
+"use client";
+
+import { useEffect, useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { db } from "../../lib/db";
+
+export default function CompletedReferralsPage() {
+  const [completed, setCompleted] = useState<any[]>([]);
+  const [selected, setSelected] = useState<any | null>(null);
+
+  useEffect(() => {
+    loadCompleted();
+    const interval = setInterval(loadCompleted, 3000);
+    // listen to referral creation/completion events to refresh immediately
+    const handler = () => loadCompleted();
+    if (typeof window !== "undefined") {
+      window.addEventListener("referral:created", handler as EventListener);
+      window.addEventListener("referral:completed", handler as EventListener);
+    }
+    return () => {
+      clearInterval(interval);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("referral:created", handler as EventListener);
+        window.removeEventListener("referral:completed", handler as EventListener);
+      }
+    };
+  }, []);
+
+  const loadCompleted = () => {
+    const all = Array.from(db.referrals.values()).filter(
+      (r: any) => r.status === "confirmed" || r.status === "paid",
+    );
+    setCompleted(all);
+  };
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-warning mb-6">Confirmed / Paid Referrals</h2>
+
+      {completed.length === 0 ? (
+        <Card className="p-8 text-center">
+          <p className="text-text-secondary">No completed referrals yet.</p>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {completed.map((ref: any) => (
+            <Card key={ref.id} className="p-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-lg font-bold text-primary mb-1">
+                    {ref.patientName}
+                  </h3>
+                  <p className="text-sm text-text-secondary">{ref.patientId || "N/A"}</p>
+                  <p className="text-xs text-text-secondary mt-2">
+                    From: {ref.referringHospital}
+                  </p>
+                  <p className="text-xs text-text-secondary">To: {ref.receivingFacility}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-mono">{ref.referralToken || ""}</p>
+                <p className="text-xs text-text-secondary">
+                  {ref.status === 'paid' ? 'Paid:' : 'Confirmed:'} {ref.completedAt || ref.paidAt || new Date(ref.updatedAt).toLocaleString()}
+                </p>
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-xs text-text-secondary">History</p>
+                  <p className="text-sm whitespace-pre-wrap bg-surface p-3 rounded">{ref.medicalHistory}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-text-secondary">Lab Results</p>
+                  <p className="text-sm whitespace-pre-wrap bg-surface p-3 rounded">{ref.labResults}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-text-secondary">Reason for Referral</p>
+                  <p className="text-sm whitespace-pre-wrap bg-surface p-3 rounded">{ref.diagnosis}</p>
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-4">
+                <Button onClick={() => { setSelected(ref); }} className="btn-secondary text-xs">View</Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {selected && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="p-6 max-w-2xl w-full bg-background">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-lg font-bold">Confirmed Referral</h3>
+              <button onClick={() => setSelected(null)} className="text-gray-500">✕</button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-text-secondary">Patient</p>
+                <p className="font-medium">{selected.patientName}</p>
+                <p className="text-xs text-text-secondary">{selected.patientId || "N/A"}</p>
+              </div>
+
+              <div>
+                <p className="text-xs text-text-secondary">Referring Hospital</p>
+                <p className="font-medium">{selected.referringHospital}</p>
+              </div>
+
+              <div>
+                <p className="text-xs text-text-secondary">Receiving Facility</p>
+                <p className="font-medium">{selected.receivingFacility}</p>
+              </div>
+
+              <div>
+                <p className="text-xs text-text-secondary">History</p>
+                <p className="text-sm whitespace-pre-wrap bg-surface p-3 rounded">{selected.medicalHistory}</p>
+              </div>
+
+              <div>
+                <p className="text-xs text-text-secondary">Lab Results</p>
+                <p className="text-sm whitespace-pre-wrap bg-surface p-3 rounded">{selected.labResults}</p>
+              </div>
+
+              <div>
+                <p className="text-xs text-text-secondary">Reason for Referral</p>
+                <p className="text-sm whitespace-pre-wrap bg-surface p-3 rounded">{selected.diagnosis}</p>
+              </div>
+
+              <div className="flex justify-end mt-4">
+                <Button onClick={() => setSelected(null)} className="btn-secondary">Close</Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+-dashboard,
+
+"use client";
+
+import { useState } from "react";
+import NotificationBell from "../notifications/notification-bell";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import PendingPhysicianReferrals from "./pending-physician-referrals";
+import CalendarView from "./calendar-view";
+
+interface AdminDashboardProps {
+  user: any;
+  token: string;
+  onLogout: () => void;
+}
+
+type AdminView = "overview" | "pending-referrals" | "calendar" | "completed";
+
+export default function AdminDashboard({
+  user,
+  token,
+  onLogout,
+}: AdminDashboardProps) {
+  const [currentView, setCurrentView] = useState<AdminView>("overview");
+
+  return (
+    <div className="bg-surface">
+      {/* Header */}
+      <header className="bg-warning text-white py-6 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-center">
+              <span className="text-black" style={{ WebkitTextStroke: '1px white' }}>UZ</span><span className="text-white" style={{ WebkitTextStroke: '1px white' }}>I</span><span className="text-red-600" style={{ WebkitTextStroke: '1px white' }}>MA</span><span className="text-white" style={{ WebkitTextStroke: '1px white' }}>C</span><span className="text-green-600" style={{ WebkitTextStroke: '1px white' }}>A</span><span className="text-green-600" style={{ WebkitTextStroke: '1px white' }}>RE</span>
+              <div className="text-sm mt-2">Administration Portal</div>
+            </h1>
+            <p className="text-amber-100">Referral & Booking Management</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <NotificationBell userId={user?.id} />
+            <Button
+              onClick={onLogout}
+              className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white"
+            >
+              Logout
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Navigation */}
+        <div className="flex gap-4 mb-8 flex-wrap">
+          <Button
+            onClick={() => setCurrentView("overview")}
+            className={
+              currentView === "overview"
+                ? "bg-warning text-white"
+                : "btn-secondary"
+            }
+          >
+            Overview
+          </Button>
+          <Button
+            onClick={() => setCurrentView("pending-referrals")}
+            className={
+              currentView === "pending-referrals"
+                ? "bg-warning text-white"
+                : "btn-secondary"
+            }
+          >
+            Pending Referrals
+          </Button>
+          <Button
+            onClick={() => setCurrentView("calendar")}
+            className={
+              currentView === "calendar"
+                ? "bg-warning text-white"
+                : "btn-secondary"
+            }
+          >
+            Calendar
+          </Button>
+        </div>
+
+        {/* Content */}
+        {currentView === "overview" && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold text-warning mb-2">
+                Total Referrals
+              </h3>
+              <p className="text-4xl font-bold">156</p>
+              <p className="text-text-secondary text-sm mt-2">This month</p>
+            </Card>
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold text-success mb-2">
+                Completed
+              </h3>
+              <p className="text-4xl font-bold">143</p>
+              <p className="text-text-secondary text-sm mt-2">
+                91.7% completion
+              </p>
+            </Card>
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold text-accent mb-2">
+                Pending Approval
+              </h3>
+              <p className="text-4xl font-bold">8</p>
+              <p className="text-text-secondary text-sm mt-2">
+                From physicians
+              </p>
+            </Card>
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold text-error mb-2">Expired</h3>
+              <p className="text-4xl font-bold">5</p>
+              <p className="text-text-secondary text-sm mt-2">
+                No payment received
+              </p>
+            </Card>
+          </div>
+        )}
+
+        {currentView === "pending-referrals" && <PendingPhysicianReferrals />}
+        {currentView === "calendar" && <CalendarView />}
+        
+      </main>
+    </div>
+  );
+}
+
+
+
+-pending-physician-referrals,
+
+"use client";
+
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { db } from "../../lib/db";
+import { sendSTKPaymentPrompt } from "../../lib/payment";
+
+export default function PendingPhysicianReferrals() {
+  const [referrals, setReferrals] = useState<any[]>([]);
+  const [selectedReferral, setSelectedReferral] = useState<any>(null);
+  const [showBiodataModal, setShowBiodataModal] = useState(false);
+  const [showEditPhoneModal, setShowEditPhoneModal] = useState(false);
+  const [biodataForm, setBiodataForm] = useState({
+    patientPhone: "",
+    stkPhoneNumber: "",
+    patientDateOfBirth: "",
+    patientNationalId: "",
+    bookedDate: "",
+  });
+  const [editPhoneData, setEditPhoneData] = useState({
+    patientPhone: "",
+    stkPhoneNumber: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState<string | null>(null);
+  // Generate 6-char alphanumeric token
+  const generateToken = (length = 6) => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let out = "";
+    for (let i = 0; i < length; i++) {
+      out += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return out;
+  };
+  const [biodataCode, setBiodataCode] = useState<string | null>(null);
+
+  const generateBiodataCode = (length = 6) => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let result = "";
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  useEffect(() => {
+    loadReferrals();
+    const interval = setInterval(() => {
+      loadReferrals();
+    }, 3000);
+    // Listen for immediate referral creation events from physician UI
+    const handler = (e: any) => {
+      loadReferrals();
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("referral:created", handler as EventListener);
+    }
+
+    return () => {
+      clearInterval(interval);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("referral:created", handler as EventListener);
+      }
+    };
+  }, []);
+
+  const loadReferrals = () => {
+    const all = Array.from(db.referrals.values());
+
+    // Track existing tokens to avoid collisions
+    const existingTokens = new Set<string>();
+    all.forEach((r: any) => {
+      if (r.referralToken) existingTokens.add(r.referralToken);
+    });
+
+    const filtered = all
+      .filter(
+        (ref) =>
+          ref.status === "pending-admin" ||
+          ref.status === "awaiting-biodata" ||
+          ref.status === "pending-payment",
+      )
+      .map((ref) => {
+        // For pending-admin referrals, ensure a single token per patient MRN-
+        if (ref.status === "pending-admin") {
+          const pid = ref.patientId;
+          if (pid && String(pid).startsWith("MRN-")) {
+            // find any existing referral with same patientId that already has a token
+            const existing = all.find(
+              (r2: any) => r2.patientId === pid && r2.referralToken,
+            );
+            if (existing) {
+              if (!ref.referralToken) {
+                ref.referralToken = existing.referralToken;
+                db.referrals.set(ref.id, ref);
+              }
+            } else {
+              if (!ref.referralToken) {
+                let token = generateToken();
+                while (existingTokens.has(token)) token = generateToken();
+                existingTokens.add(token);
+                ref.referralToken = token;
+                db.referrals.set(ref.id, ref);
+              }
+            }
+          } else {
+            // For other referrals without MRN-, ensure they have a token too
+            if (!ref.referralToken) {
+              let token = generateToken();
+              while (existingTokens.has(token)) token = generateToken();
+              existingTokens.add(token);
+              ref.referralToken = token;
+              db.referrals.set(ref.id, ref);
+            }
+          }
+        }
+
+        return ref;
+      });
+
+    setReferrals(filtered);
+  };
+
+  const handleStartBiodata = (referral: any) => {
+    setSelectedReferral(referral);
+    setBiodataForm({
+      patientPhone: referral.patientPhone || "",
+      stkPhoneNumber: referral.stkPhoneNumber || "",
+      patientDateOfBirth: referral.patientDateOfBirth || "",
+      patientNationalId: referral.patientNationalId || "",
+      bookedDate: referral.bookedDate || "",
+    });
+    setShowBiodataModal(true);
+    setBiodataCode(generateBiodataCode());
+  };
+
+  const handleSaveBiodata = async () => {
+    if (!selectedReferral) return;
+    if (!biodataForm.patientPhone || !biodataForm.stkPhoneNumber) {
+      alert("Please fill in patient phone and STK phone number");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const referral = db.referrals.get(selectedReferral.id);
+      if (referral) {
+        referral.patientPhone = biodataForm.patientPhone;
+        referral.stkPhoneNumber = biodataForm.stkPhoneNumber;
+        referral.patientDateOfBirth = biodataForm.patientDateOfBirth;
+        referral.patientNationalId = biodataForm.patientNationalId;
+        referral.bookedDate = biodataForm.bookedDate;
+        referral.status = "pending-payment";
+        referral.updatedAt = new Date();
+
+        // Send STK prompt
+        const stkResult = await sendSTKPaymentPrompt(
+          referral.id,
+          biodataForm.stkPhoneNumber,
+          50,
+        );
+
+        if (stkResult.success) {
+          // attach generated code to referral for tracking
+          referral.biodataCode = biodataCode || null;
+          referral.stkSentCount = 1;
+          db.referrals.set(referral.id, referral);
+          loadReferrals();
+          setShowBiodataModal(false);
+          setSelectedReferral(null);
+          setBiodataCode(null);
+          alert("Biodata saved and STK prompt sent successfully!");
+        } else {
+          alert("Failed to send STK prompt");
+        }
+      }
+    } catch (err) {
+      console.log("[v0] Error:", err);
+      alert("Error processing referral");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditPhone = (referral: any) => {
+    setSelectedReferral(referral);
+    setEditPhoneData({
+      patientPhone: referral.patientPhone || "",
+      stkPhoneNumber: referral.stkPhoneNumber || "",
+    });
+    setShowEditPhoneModal(true);
+  };
+
+  const handleSaveEditPhone = async () => {
+    if (!selectedReferral) return;
+
+    setLoading(true);
+    try {
+      const referral = db.referrals.get(selectedReferral.id);
+      if (referral) {
+        referral.patientPhone = editPhoneData.patientPhone;
+        referral.stkPhoneNumber = editPhoneData.stkPhoneNumber;
+        referral.updatedAt = new Date();
+        db.referrals.set(referral.id, referral);
+        loadReferrals();
+        setShowEditPhoneModal(false);
+        setSelectedReferral(null);
+        alert("Phone numbers updated successfully");
+      }
+    } catch (err) {
+      alert("Error updating phone numbers");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendSTK = async (referral: any) => {
+    if (!referral.stkPhoneNumber) {
+      alert("STK phone number not set");
+      return;
+    }
+
+    setResending(referral.id);
+    try {
+      const result = await sendSTKPaymentPrompt(
+        referral.id,
+        referral.stkPhoneNumber,
+        50,
+      );
+
+      if (result.success) {
+        const updated = db.referrals.get(referral.id);
+        if (updated) {
+          updated.stkSentCount = (updated.stkSentCount || 0) + 1;
+          db.referrals.set(referral.id, updated);
+          loadReferrals();
+        }
+        alert(`STK resent successfully to ${referral.stkPhoneNumber}`);
+      } else {
+        alert(`Failed to resend STK: ${result.message}`);
+      }
+    } catch (err) {
+      alert("Error resending STK");
+    } finally {
+      setResending(null);
+    }
+  };
+
+  const handleConfirmPayment = (referral: any) => {
+    const updated = db.referrals.get(referral.id);
+    if (updated) {
+      updated.status = "paid";
+      updated.updatedAt = new Date();
+      updated.paidAt = new Date();
+      updated.completedAt = new Date();
+      db.referrals.set(referral.id, updated);
+      // notify listeners so completed list updates immediately
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("referral:completed", { detail: updated }));
+      }
+      loadReferrals();
+      alert("Referral confirmed and moved to completed referrals!");
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "Routine":
+        return "bg-success bg-opacity-10 text-success";
+      case "Urgent":
+        return "bg-warning bg-opacity-10 text-warning";
+      case "Emergency":
+        return "bg-error bg-opacity-10 text-error";
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold text-warning mb-6">
+        Pending Physician Referrals
+      </h2>
+
+      {referrals.length === 0 ? (
+        <Card className="p-8 text-center">
+          <p className="text-text-secondary">
+            No pending referrals at the moment
+          </p>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {referrals.map((referral) => (
+            <Card key={referral.id} className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                  <p className="text-xs text-text-secondary mb-1">
+                    Patient Name
+                  </p>
+                  <p className="font-semibold">{referral.patientName}</p>
+                  <p className="text-xs text-text-secondary">
+                    ID: {referral.patientId || "N/A"}
+                  </p>
+                </div>
+                <div className="flex items-center">
+                  {referral.referralToken && (
+                    <div className="ml-auto text-sm font-mono bg-gray-100 text-gray-800 px-2 py-1 rounded">
+                      {referral.referralToken}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs text-text-secondary mb-1">
+                    Referral Type
+                  </p>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(referral.priority)}`}
+                  >
+                    {referral.priority}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs text-text-secondary mb-1">Status</p>
+                  <p className="font-semibold">
+                    {referral.status === "pending-admin" &&
+                      "Awaiting Administration Action"}
+                    {referral.status === "awaiting-biodata" &&
+                      "Awaiting Biodata"}
+                    {referral.status === "pending-payment" && "Pending Payment"}
+                    {referral.status === "confirmed" && "Confirmed"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 py-4 border-t border-b border-border">
+                <div>
+                  <p className="text-xs text-text-secondary mb-1">From</p>
+                  <p className="text-sm">{referral.referringHospital}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-text-secondary mb-1">To</p>
+                  <p className="text-sm">{referral.receivingFacility}</p>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <p className="text-xs text-text-secondary mb-2">
+                  Medical History & Test Results
+                </p>
+                <details className="text-sm">
+                  <summary className="cursor-pointer font-medium text-primary">
+                    View Medical Details
+                  </summary>
+                  <div className="mt-2 p-3 bg-surface rounded space-y-2">
+                    <div>
+                      <p className="font-medium text-xs">History:</p>
+                      <p className="text-xs text-text-secondary">
+                        {referral.medicalHistory}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-xs">Lab Results:</p>
+                      <p className="text-xs text-text-secondary">
+                        {referral.labResults}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-xs">Diagnosis:</p>
+                      <p className="text-xs text-text-secondary">
+                        {referral.diagnosis}
+                      </p>
+                    </div>
+                  </div>
+                </details>
+              </div>
+
+              {referral.status !== "pending-admin" && (
+                <div className="mb-4 p-3 bg-surface rounded space-y-2">
+                  <p className="text-xs font-semibold">Payment Information</p>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <p className="text-text-secondary">Patient Phone:</p>
+                      <p className="font-mono">{referral.patientPhone}</p>
+                    </div>
+                    <div>
+                      <p className="text-text-secondary">STK Phone:</p>
+                      <p className="font-mono">{referral.stkPhoneNumber}</p>
+                    </div>
+                  </div>
+                  {referral.bookedDate && (
+                    <div className="text-xs">
+                      <p className="text-text-secondary">Booked: {referral.bookedDate}</p>
+                    </div>
+                  )}
+                  {referral.status === "pending-payment" && (
+                    <p className="text-xs text-warning">
+                      STK sent {referral.stkSentCount} time(s)
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div className="flex gap-2 flex-wrap">
+                {referral.status === "pending-admin" && (
+                  <Button
+                    onClick={() => handleStartBiodata(referral)}
+                    className="bg-warning text-white hover:opacity-90"
+                  >
+                    Add Biodata & Send STK
+                  </Button>
+                )}
+
+                {referral.status === "pending-payment" && (
+                  <>
+                    <Button
+                      onClick={() => handleResendSTK(referral)}
+                      disabled={resending === referral.id}
+                      className="btn-secondary text-xs"
+                    >
+                      {resending === referral.id ? "Sending..." : "Resend STK"}
+                    </Button>
+                    <Button
+                      onClick={() => handleEditPhone(referral)}
+                      className="btn-secondary text-xs"
+                    >
+                      Edit Phone Numbers
+                    </Button>
+                    <Button
+                      onClick={() => handleConfirmPayment(referral)}
+                      className="bg-success text-white hover:opacity-90 text-xs"
+                    >
+                      Mark as Paid
+                    </Button>
+                  </>
+                )}
+
+                {referral.status === "confirmed" && (
+                  <div className="text-xs text-success font-semibold">
+                    ✓ Referral Completed
+                  </div>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Biodata Modal */}
+      {showBiodataModal && selectedReferral && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="p-6 max-w-2xl w-full bg-background">
+            <h3 className="text-lg font-bold mb-4">
+              Add Patient Biodata & Send STK
+            </h3>
+              {biodataCode && (
+                <p className="text-sm font-mono mb-2">
+                  Referral Code: <span className="font-bold">{biodataCode}</span>
+                </p>
+              )}
+            <p className="text-xs text-text-secondary mb-4">
+              Patient: {selectedReferral.patientName}
+            </p>
+
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Patient Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    value={biodataForm.patientPhone}
+                    onChange={(e) =>
+                      setBiodataForm({
+                        ...biodataForm,
+                        patientPhone: e.target.value,
+                      })
+                    }
+                    className="input-base"
+                    placeholder="+254712345678"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Phone for STK Prompt *
+                  </label>
+                  <input
+                    type="tel"
+                    value={biodataForm.stkPhoneNumber}
+                    onChange={(e) =>
+                      setBiodataForm({
+                        ...biodataForm,
+                        stkPhoneNumber: e.target.value,
+                      })
+                    }
+                    className="input-base"
+                    placeholder="+254712345678"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    value={biodataForm.patientDateOfBirth}
+                    onChange={(e) =>
+                      setBiodataForm({
+                        ...biodataForm,
+                        patientDateOfBirth: e.target.value,
+                      })
+                    }
+                    className="input-base"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    National ID
+                  </label>
+                  <input
+                    type="text"
+                    value={biodataForm.patientNationalId}
+                    onChange={(e) =>
+                      setBiodataForm({
+                        ...biodataForm,
+                        patientNationalId: e.target.value,
+                      })
+                    }
+                    className="input-base"
+                    placeholder="e.g., 12345678"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Booked Date
+                  </label>
+                  <input
+                    type="date"
+                    value={biodataForm.bookedDate}
+                    onChange={(e) =>
+                      setBiodataForm({
+                        ...biodataForm,
+                        bookedDate: e.target.value,
+                      })
+                    }
+                    className="input-base"
+                  />
+                </div>
+                
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-6 justify-end">
+              <Button
+                onClick={() => setShowBiodataModal(false)}
+                className="btn-secondary"
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveBiodata}
+                className="bg-warning text-white hover:opacity-90"
+                disabled={loading}
+              >
+                {loading ? "Processing..." : "Send STK Prompt"}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Edit Phone Modal */}
+      {showEditPhoneModal && selectedReferral && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="p-6 max-w-md w-full bg-background">
+            <h3 className="text-lg font-bold mb-4">Edit Phone Numbers</h3>
+            <p className="text-xs text-text-secondary mb-4">
+              Referral: {selectedReferral.patientName}
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Patient Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={editPhoneData.patientPhone}
+                  onChange={(e) =>
+                    setEditPhoneData({
+                      ...editPhoneData,
+                      patientPhone: e.target.value,
+                    })
+                  }
+                  className="input-base"
+                  placeholder="+254712345678"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  STK Receiving Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={editPhoneData.stkPhoneNumber}
+                  onChange={(e) =>
+                    setEditPhoneData({
+                      ...editPhoneData,
+                      stkPhoneNumber: e.target.value,
+                    })
+                  }
+                  className="input-base"
+                  placeholder="+254712345678"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-6 justify-end">
+              <Button
+                onClick={() => setShowEditPhoneModal(false)}
+                className="btn-secondary"
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveEditPhone}
+                className="bg-warning text-white hover:opacity-90"
+                disabled={loading}
+              >
+                {loading ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+-referral-form,
+
+"use client";
+
+import type React from "react";
+
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  sendSTKPaymentPrompt,
+  getAvailableSlots,
+  getAvailableDates,
+} from "../../lib/payment";
+import { db } from "../../lib/db";
+
+const clinics = [
+  { id: "clinic-001", name: "TB Wing A - Nairobi Central Hospital" },
+  { id: "clinic-002", name: "TB Wing B - Mombasa County Hospital" },
+];
+
+export default function ReferralForm() {
+  const [formData, setFormData] = useState({
+    patientName: "",
+    patientPhone: "", // Patient's actual phone number
+    stkPhoneNumber: "", // Phone number to receive STK prompt (can be different)
+    patientId: "patient-001",
+    sendingClinic: "clinic-001",
+    receivingClinic: "clinic-002",
+    referralDate: "",
+    referralTime: "",
+    reason: "",
+  });
+
+  const [stkSent, setStkSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [error, setError] = useState("");
+
+  const handleClinicChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "receivingClinic") {
+      const dates = getAvailableDates(value, new Date(), 30);
+      setAvailableDates(dates);
+      setFormData((prev) => ({ ...prev, referralDate: "" }));
+      setAvailableSlots([]);
+    }
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setFormData((prev) => ({ ...prev, referralDate: value, referralTime: "" }));
+
+    if (value && formData.receivingClinic) {
+      const slots = getAvailableSlots(formData.receivingClinic, value);
+      setAvailableSlots(slots.available);
+
+      if (slots.isFull) {
+        setError(
+          "This clinic is fully booked for this date. Please select another date.",
+        );
+      } else {
+        setError("");
+      }
+    }
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
+    const { name, value } = e.target;
+
+    if (name === "receivingClinic") {
+      handleClinicChange(e as React.ChangeEvent<HTMLSelectElement>);
+    } else if (name === "referralDate") {
+      handleDateChange(e as React.ChangeEvent<HTMLInputElement>);
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      // Create booking in database
+      const bookingId = `booking-${Date.now()}`;
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      const booking = {
+        id: bookingId,
+        referralId: `referral-${Date.now()}`,
+        patientId: formData.patientId,
+        patientPhone: formData.patientPhone, // Store patient phone
+        stkPhoneNumber: formData.stkPhoneNumber, // Store STK phone
+        clinicId: formData.receivingClinic,
+        slotId: `slot-${formData.referralTime}`,
+        bookingDate: formData.referralDate,
+        bookingTime: formData.referralTime,
+        status: "pending-payment",
+        paymentStatus: "pending",
+        paymentAmount: 50,
+        mpesaTransactionId: undefined,
+        stkSentCount: 0, // Initialize STK sent counter
+        createdAt: new Date(),
+        expiresAt,
+        updatedAt: new Date(),
+      };
+
+      db.bookings.set(bookingId, booking);
+      console.log("[v0] Booking created:", booking);
+
+      // Send STK payment prompt to the STK phone number
+      const result = await sendSTKPaymentPrompt(
+        bookingId,
+        formData.stkPhoneNumber,
+        50,
+      );
+
+      if (result.success) {
+        booking.stkSentCount = 1;
+        db.bookings.set(bookingId, booking);
+
+        setStkSent(true);
+        alert(`Referral created! ${result.message}`);
+
+        // Reset form
+        setFormData({
+          patientName: "",
+          patientPhone: "",
+          stkPhoneNumber: "",
+          patientId: "patient-001",
+          sendingClinic: "clinic-001",
+          receivingClinic: "clinic-002",
+          referralDate: "",
+          referralTime: "",
+          reason: "",
+        });
+
+        // Auto-reset after 3 seconds
+        setTimeout(() => setStkSent(false), 3000);
+      } else {
+        setError(result.message);
+      }
+    } catch (err) {
+      setError("Failed to create referral. Please try again.");
+      console.error("[v0] Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card className="p-8 max-w-3xl">
+      <h2 className="text-2xl font-bold mb-6 text-warning">
+        Create Inter-Facility Referral
+      </h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Patient Name
+            </label>
+            <input
+              type="text"
+              name="patientName"
+              value={formData.patientName}
+              onChange={handleChange}
+              className="input-base"
+              placeholder="Patient full name"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Patient Phone Number
+            </label>
+            <input
+              type="tel"
+              name="patientPhone"
+              value={formData.patientPhone}
+              onChange={handleChange}
+              className="input-base"
+              placeholder="+254712345678"
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Phone Number for STK Prompt
+          </label>
+          <input
+            type="tel"
+            name="stkPhoneNumber"
+            value={formData.stkPhoneNumber}
+            onChange={handleChange}
+            className="input-base"
+            placeholder="+254712345678 (can be different from patient phone)"
+            required
+          />
+          <p className="text-xs text-text-secondary mt-1">
+            This is the phone that will receive the M-Pesa STK push
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Sending Clinic
+            </label>
+            <select
+              name="sendingClinic"
+              value={formData.sendingClinic}
+              onChange={handleChange}
+              className="input-base"
+            >
+              {clinics.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Receiving Clinic
+            </label>
+            <select
+              name="receivingClinic"
+              value={formData.receivingClinic}
+              onChange={handleChange}
+              className="input-base"
+            >
+              {clinics.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Referral Date
+          </label>
+          {availableDates.length > 0 ? (
+            <select
+              name="referralDate"
+              value={formData.referralDate}
+              onChange={(e) => handleDateChange(e as any)}
+              className="input-base"
+              required
+            >
+              <option value="">Select a date</option>
+              {availableDates.map((date) => (
+                <option key={date} value={date}>
+                  {date}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="date"
+              name="referralDate"
+              value={formData.referralDate}
+              onChange={(e) => handleDateChange(e)}
+              className="input-base"
+              required
+            />
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Available Time Slot
+          </label>
+          {availableSlots.length > 0 ? (
+            <select
+              name="referralTime"
+              value={formData.referralTime}
+              onChange={handleChange}
+              className="input-base"
+              required
+            >
+              <option value="">Select a time</option>
+              {availableSlots.map((slot) => (
+                <option key={slot} value={slot}>
+                  {slot}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div className="text-text-secondary text-sm p-3 bg-surface rounded border border-border">
+              Select a date first to see available times
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Reason for Referral
+          </label>
+          <textarea
+            name="reason"
+            value={formData.reason}
+            onChange={handleChange}
+            className="input-base min-h-[100px]"
+            placeholder="Medical reason for referral"
+            required
+          />
+        </div>
+
+        {error && (
+          <div className="bg-error bg-opacity-10 border border-error text-error p-3 rounded">
+            {error}
+          </div>
+        )}
+
+        {stkSent && (
+          <div className="bg-success bg-opacity-10 border border-success p-4 rounded">
+            <p className="text-success font-medium">STK sent successfully</p>
+            <p className="text-sm text-text-secondary mt-1">
+              Waiting for payment confirmation...
+            </p>
+          </div>
+        )}
+
+        <Button
+          type="submit"
+          disabled={loading || stkSent}
+          className="w-full bg-warning hover:opacity-90 text-white mt-6 disabled:opacity-50"
+        >
+          {loading ? "Processing..." : "Send STK Payment Prompt"}
+        </Button>
+      </form>
+    </Card>
+  );
+}
+
+
+
+-referrals-list,
+
+"use client";
+
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { sendSTKPaymentPrompt } from "../../lib/payment";
+import { db } from "../../lib/db";
+
+export default function ReferralsList() {
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editData, setEditData] = useState({
+    patientPhone: "",
+    stkPhoneNumber: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState<string | null>(null);
+
+  // Load bookings on mount
+  useEffect(() => {
+    const allBookings = Array.from(db.bookings.values());
+    setBookings(allBookings);
+  }, []);
+
+  const handleResendSTK = async (bookingId: string, stkPhone: string) => {
+    setResending(bookingId);
+    try {
+      const result = await sendSTKPaymentPrompt(bookingId, stkPhone, 50);
+
+      if (result.success) {
+        const booking = db.bookings.get(bookingId);
+        if (booking) {
+          booking.stkSentCount = (booking.stkSentCount || 0) + 1;
+          db.bookings.set(bookingId, booking);
+          setBookings(Array.from(db.bookings.values()));
+        }
+        alert(`STK resent successfully to ${stkPhone}`);
+      } else {
+        alert(`Failed to resend STK: ${result.message}`);
+      }
+    } catch (err) {
+      alert("Error resending STK");
+    } finally {
+      setResending(null);
+    }
+  };
+
+  const handleEditPhones = (booking: any) => {
+    setSelectedBooking(booking);
+    setEditData({
+      patientPhone: booking.patientPhone,
+      stkPhoneNumber: booking.stkPhoneNumber,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSavePhones = async () => {
+    if (!selectedBooking) return;
+
+    setLoading(true);
+    try {
+      const booking = db.bookings.get(selectedBooking.id);
+      if (booking) {
+        booking.patientPhone = editData.patientPhone;
+        booking.stkPhoneNumber = editData.stkPhoneNumber;
+        booking.updatedAt = new Date();
+        db.bookings.set(booking.id, booking);
+        setBookings(Array.from(db.bookings.values()));
+      }
+      setShowEditModal(false);
+      alert("Phone numbers updated successfully");
+    } catch (err) {
+      alert("Error updating phone numbers");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getAllBookings = () => {
+    return Array.from(db.bookings.values()).sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  };
+
+  const allBookings = getAllBookings();
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold text-warning mb-6">All Referrals</h2>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b-2 border-border">
+              <th className="text-left p-4 font-semibold">Patient</th>
+              <th className="text-left p-4 font-semibold">Patient Phone</th>
+              <th className="text-left p-4 font-semibold">STK Phone</th>
+              <th className="text-left p-4 font-semibold">Date & Time</th>
+              <th className="text-left p-4 font-semibold">Status</th>
+              <th className="text-left p-4 font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allBookings.map((booking) => (
+              <tr
+                key={booking.id}
+                className="border-b border-border hover:bg-surface"
+              >
+                <td className="p-4">
+                  <div>
+                    <p className="font-medium">Patient #{booking.patientId}</p>
+                    <p className="text-xs text-text-secondary">
+                      {booking.id.slice(-6)}
+                    </p>
+                  </div>
+                </td>
+                <td className="p-4 text-sm font-mono">
+                  {booking.patientPhone}
+                </td>
+                <td className="p-4 text-sm font-mono">
+                  {booking.stkPhoneNumber}
+                </td>
+                <td className="p-4 text-sm">
+                  {booking.bookingDate} {booking.bookingTime}
+                </td>
+                <td className="p-4">
+                  <div>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium block ${
+                        booking.status === "pending-payment"
+                          ? "bg-warning bg-opacity-10 text-warning"
+                          : booking.status === "confirmed"
+                            ? "bg-success bg-opacity-10 text-success"
+                            : "bg-error bg-opacity-10 text-error"
+                      }`}
+                    >
+                      {booking.status}
+                    </span>
+                    <p className="text-xs text-text-secondary mt-1">
+                      STK sent: {booking.stkSentCount || 0}x
+                    </p>
+                  </div>
+                </td>
+                <td className="p-4 space-y-2">
+                  {booking.status === "pending-payment" && (
+                    <>
+                      <Button
+                        size="sm"
+                        className="btn-secondary text-xs w-full"
+                        onClick={() =>
+                          handleResendSTK(booking.id, booking.stkPhoneNumber)
+                        }
+                        disabled={resending === booking.id}
+                      >
+                        {resending === booking.id ? "Sending..." : "Resend STK"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="btn-secondary text-xs w-full"
+                        onClick={() => handleEditPhones(booking)}
+                      >
+                        Edit Phones
+                      </Button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {showEditModal && selectedBooking && (
+        <Card className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="p-6 max-w-md w-full bg-background">
+            <h3 className="text-lg font-bold mb-4">Edit Phone Numbers</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Patient Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={editData.patientPhone}
+                  onChange={(e) =>
+                    setEditData((prev) => ({
+                      ...prev,
+                      patientPhone: e.target.value,
+                    }))
+                  }
+                  className="input-base"
+                  placeholder="+254712345678"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  STK Receiving Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={editData.stkPhoneNumber}
+                  onChange={(e) =>
+                    setEditData((prev) => ({
+                      ...prev,
+                      stkPhoneNumber: e.target.value,
+                    }))
+                  }
+                  className="input-base"
+                  placeholder="+254712345678"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSavePhones}
+                  disabled={loading}
+                  className="flex-1 bg-warning text-white hover:opacity-90"
+                >
+                  {loading ? "Saving..." : "Save"}
+                </Button>
+                <Button
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 btn-secondary"
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+
+
+
+
+components/auth/:
+
+-admin-login.tsx
+
+"use client";
+
+import type React from "react";
+
+import { useState } from "react";
+import { login } from "../../lib/auth";
+import { saveAuthState } from "../../lib/storage";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+interface AdminLoginProps {
+  onLoginSuccess: (user: any, token: string) => void;
+}
+
+export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
+  const [email, setEmail] = useState("admin@uzimacare.ke");
+  const [password, setPassword] = useState("password");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    const result = await login({ email, password }, "admin");
+    setLoading(false);
+
+    if (result.success && result.user && result.token) {
+      saveAuthState(result.token, result.user);
+      onLoginSuccess(result.user, result.token);
+    } else {
+      setError(result.error || "Login failed");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-warning mb-2">Administration Login</h2>
+          <p className="text-text-secondary">Manage referrals and bookings</p>
+        </div>
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Email Address
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input-base"
+              placeholder="administration@uzimacare.ke"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input-base"
+              placeholder="••••••••"
+            />
+          </div>
+
+          {error && (
+            <div className="bg-error bg-opacity-10 border border-error text-error p-3 rounded">
+              {error}
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-warning hover:opacity-90 text-white disabled:opacity-50"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </Button>
+        </form>
+      </Card>
+    </div>
+  );
+}
+
+
+
+-patient-login.tsx
+
+"use client";
+
+import type React from "react";
+
+import { useState } from "react";
+import { login } from "../../lib/auth";
+import { saveAuthState } from "../../lib/storage";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+interface PatientLoginProps {
+  onLoginSuccess: (user: any, token: string) => void;
+}
+
+export default function PatientLogin({ onLoginSuccess }: PatientLoginProps) {
+  const [phoneNumber, setPhoneNumber] = useState("+254712345678");
+  const [password, setPassword] = useState("password");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    const result = await login({ phoneNumber, password }, "patient");
+    setLoading(false);
+
+    if (result.success && result.user && result.token) {
+      saveAuthState(result.token, result.user);
+      onLoginSuccess(result.user, result.token);
+    } else {
+      setError(result.error || "Login failed");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-accent mb-2">Patient Login</h2>
+          <p className="text-text-secondary">
+            View your bookings and appointments
+          </p>
+        </div>
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className="input-base"
+              placeholder="+254712345678"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input-base"
+              placeholder="••••••••"
+            />
+          </div>
+
+          {error && (
+            <div className="bg-error bg-opacity-10 border border-error text-error p-3 rounded">
+              {error}
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-accent hover:bg-accent-light text-white disabled:opacity-50"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </Button>
+        </form>
+      </Card>
+    </div>
+  );
+}
+
+
+
+-physician-login.tsx
+
+"use client";
+
+import type React from "react";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { login } from "../../lib/auth";
+
+interface PhysicianLoginProps {
+  onLoginSuccess: (userData: any, authToken: string) => void;
+}
+
+export default function PhysicianLogin({
+  onLoginSuccess,
+}: PhysicianLoginProps) {
+  const [email, setEmail] = useState("56845");
+  const [password, setPassword] = useState("password");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await login({ email, password }, "physician");
+      if (response.success && response.user && response.token) {
+        onLoginSuccess(response.user, response.token);
+      } else {
+        setError(response.error || "Login failed");
+      }
+    } catch (err) {
+      setError("An error occurred during login");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md p-8 shadow-lg">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2 text-center">
+            <span className="text-black" style={{ WebkitTextStroke: '1px white' }}>UZ</span><span className="text-white" style={{ WebkitTextStroke: '1px black', textStroke: '1px black' }}>I</span><span className="text-red-600" style={{ WebkitTextStroke: '1px white' }}>MA</span><span className="text-white" style={{ WebkitTextStroke: '1px black', textStroke: '1px black' }}>C</span><span className="text-green-600" style={{ WebkitTextStroke: '1px white' }}>A</span><span className="text-green-600" style={{ WebkitTextStroke: '1px white' }}>RE</span>
+          </h1>
+          <p className="text-text-secondary">Physician Portal</p>
+        </div>
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-2">
+              license id
+            </label>
+            <input
+              type="text"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="56845"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-2">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter password"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+            disabled={loading}
+          >
+            {loading ? "Signing In..." : "Sign In"}
+          </Button>
+        </form>
+
+        <p className="text-center text-sm text-text-secondary mt-6">
+          Demo license id: 56845 | Password: password
+        </p>
+      </Card>
+    </div>
+  );
+}
+
+
+
+-role-selector.tsx
+
+"use client";
+
+import type { UserRole } from "../../lib/types";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+interface RoleSelectorProps {
+  onSelectRole: (role: UserRole) => void;
+}
+
+export default function RoleSelector({ onSelectRole }: RoleSelectorProps) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary to-primary-light flex items-center justify-center p-4">
+      <div className="w-full max-w-5xl">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-bold mb-2 text-center">
+            <span className="text-black" style={{ WebkitTextStroke: '1px white' }}>UZ</span><span className="text-white" style={{ WebkitTextStroke: '1px white' }}>I</span><span className="text-red-600" style={{ WebkitTextStroke: '1px white' }}>MA</span><span className="text-white" style={{ WebkitTextStroke: '1px white' }}>C</span><span className="text-green-600" style={{ WebkitTextStroke: '1px white' }}>A</span><span className="text-green-600" style={{ WebkitTextStroke: '1px white' }}>RE</span>
+          </h1>
+          <p className="text-lg text-purple-100">A HEALTHCARE REFERRAL SYSTEM</p>
+        </div>
+
+        {/* Role Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch px-2">
+          {/* Physician */}
+          <Card
+            className="p-8 cursor-pointer hover:shadow-lg transition-all border-2 border-transparent hover:border-accent h-full"
+            onClick={() => onSelectRole("physician")}
+          >
+            <div className="flex flex-col items-center text-center h-full justify-between">
+              <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mb-4">
+                <svg
+                  className="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold mb-2">Physician</h3>
+              <p className="text-text-secondary mb-4">
+                Create and manage patient referrals
+              </p>
+              <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white mt-4">
+                Login as Physician
+              </Button>
+            </div>
+          </Card>
+
+          {/* Patient */}
+          {/* Patient portal removed */}
+
+          {/* Admin */}
+          <Card
+            className="p-8 cursor-pointer hover:shadow-lg transition-all border-2 border-transparent hover:border-accent h-full"
+            onClick={() => onSelectRole("admin")}
+          >
+            <div className="flex flex-col items-center text-center h-full justify-between">
+              <div className="w-16 h-16 bg-warning rounded-full flex items-center justify-center mb-4">
+                <svg
+                  className="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold mb-2">Administration</h3>
+              <p className="text-text-secondary mb-4">
+                Manage referrals and coordinate care
+              </p>
+              <Button className="w-full bg-warning hover:opacity-90 text-white mt-4">
+                Login as Administration
+              </Button>
+            </div>
+          </Card>
+        </div>
+
+        {/* Demo credentials removed to eliminate bottom white block */}
+      </div>
+    </div>
+  );
+}
+
+
+
+components/notifications:
+
+-notification-bell.tsx,
+
+"use client";
+
+import { useState, useEffect } from "react";
+import {
+  getUserNotifications,
+  markAsRead,
+  getUnreadCount,
+} from "../../lib/notifications";
+
+interface NotificationBellProps {
+  userId: string;
+}
+
+export default function NotificationBell({ userId }: NotificationBellProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const notifs = getUserNotifications(userId);
+    setNotifications(notifs);
+    setUnreadCount(getUnreadCount(userId));
+
+    // Refresh every 10 seconds
+    const interval = setInterval(() => {
+      const updated = getUserNotifications(userId);
+      setNotifications(updated);
+      setUnreadCount(getUnreadCount(userId));
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [userId]);
+
+  const handleNotificationClick = (notifId: string) => {
+    markAsRead(notifId);
+    const updated = getUserNotifications(userId);
+    setNotifications(updated);
+    setUnreadCount(getUnreadCount(userId));
+  };
+
+  const getIconColor = (type: string) => {
+    switch (type) {
+      case "payment":
+        return "text-success";
+      case "booking":
+        return "text-accent";
+      case "overdue":
+        return "text-error";
+      case "rescheduled":
+        return "text-warning";
+      default:
+        return "text-primary";
+    }
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="relative p-2 hover:bg-surface rounded-lg transition-colors"
+        aria-label="Notifications"
+      >
+        <svg
+          className="w-6 h-6 text-primary"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+          />
+        </svg>
+        {unreadCount > 0 && (
+          <span className="absolute top-1 right-1 w-5 h-5 bg-error text-white text-xs rounded-full flex items-center justify-center font-bold">
+            {unreadCount}
+          </span>
+        )}
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-80 bg-white border border-border rounded-lg shadow-lg z-50">
+          <div className="p-4 border-b border-border">
+            <h3 className="font-semibold text-primary">Notifications</h3>
+          </div>
+
+          <div className="max-h-96 overflow-y-auto">
+            {notifications.length === 0 ? (
+              <div className="p-4 text-center text-text-secondary">
+                No notifications
+              </div>
+            ) : (
+              notifications.map((notif) => (
+                <div
+                  key={notif.id}
+                  onClick={() => handleNotificationClick(notif.id)}
+                  className={`p-4 border-b border-border cursor-pointer hover:bg-surface transition-colors ${
+                    !notif.isRead ? "bg-primary bg-opacity-5" : ""
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`mt-1 ${getIconColor(notif.type)}`}>
+                      {notif.type === "payment" && (
+                        <svg
+                          className="w-5 h-5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
+                        </svg>
+                      )}
+                      {notif.type === "booking" && (
+                        <svg
+                          className="w-5 h-5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.3A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z" />
+                        </svg>
+                      )}
+                      {notif.type === "overdue" && (
+                        <svg
+                          className="w-5 h-5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm text-text">
+                        {notif.title}
+                      </p>
+                      <p className="text-xs text-text-secondary mt-1">
+                        {notif.message}
+                      </p>
+                      <p className="text-xs text-text-muted mt-2">
+                        {new Date(notif.createdAt).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+components/patient:
+
+-booking-details,
+
+"use client";
+
+import { useState } from "react";
+import {
+  confirmPayment,
+  getAvailableSlots,
+  getAvailableDates,
+} from "../../lib/payment";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+interface BookingDetailsProps {
+  booking: any;
+  onBack: () => void;
+}
+
+export default function BookingDetails({
+  booking,
+  onBack,
+}: BookingDetailsProps) {
+  const [showReschedule, setShowReschedule] = useState(false);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const handleShowReschedule = () => {
+    const dates = getAvailableDates(booking.clinicId, new Date(), 30);
+    setAvailableDates(dates);
+    setShowReschedule(true);
+  };
+
+  const handleDateSelect = (date: string) => {
+    setSelectedDate(date);
+    const slots = getAvailableSlots(booking.clinicId, date);
+    setAvailableSlots(slots.available);
+    setSelectedTime("");
+  };
+
+  const handleConfirmPayment = async () => {
+    setLoading(true);
+    const result = await confirmPayment(booking.id);
+    setLoading(false);
+
+    if (result.success) {
+      alert(result.message);
+      onBack();
+    } else {
+      alert(result.message);
+    }
+  };
+
+  const handleReschedule = () => {
+    if (selectedDate && selectedTime) {
+      console.log("[v0] Rescheduling to:", selectedDate, selectedTime);
+      alert(`Booking rescheduled to ${selectedDate} at ${selectedTime}`);
+      onBack();
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Button onClick={onBack} className="btn-secondary">
+        Back to Bookings
+      </Button>
+
+      <Card className="p-8">
+        <h2 className="text-3xl font-bold text-primary mb-6">
+          Booking Details
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h3 className="text-lg font-semibold mb-4">
+              Appointment Information
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-text-secondary">Clinic</p>
+                <p className="font-medium">{booking.clinic}</p>
+              </div>
+              <div>
+                <p className="text-sm text-text-secondary">Date</p>
+                <p className="font-medium">{booking.date}</p>
+              </div>
+              <div>
+                <p className="text-sm text-text-secondary">Time</p>
+                <p className="font-medium">{booking.time}</p>
+              </div>
+              <div>
+                <p className="text-sm text-text-secondary">Amount</p>
+                <p className="font-medium text-lg">KSH {booking.amount}</p>
+              </div>
+              <div>
+                <p className="text-sm text-text-secondary">Status</p>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                    booking.status === "pending-payment"
+                      ? "bg-warning bg-opacity-10 text-warning"
+                      : "bg-success bg-opacity-10 text-success"
+                  }`}
+                >
+                  {booking.status === "pending-payment"
+                    ? "Pending Payment"
+                    : "Confirmed"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Payment Instructions</h3>
+            {booking.status === "pending-payment" ? (
+              <div className="space-y-4">
+                <div className="bg-warning bg-opacity-10 border border-warning p-4 rounded-lg">
+                  <p className="text-warning font-medium mb-2">
+                    Action Required
+                  </p>
+                  <p className="text-sm text-text-secondary">
+                    Please complete payment within {booking.daysLeft || 1}{" "}
+                    day(s) to confirm this booking.
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-text-secondary mb-2">
+                    Pay KSH 50 via MPESA to:
+                  </p>
+                  <p className="font-mono bg-surface p-3 rounded border border-border">
+                    *844#
+                  </p>
+                </div>
+                <Button
+                  onClick={handleConfirmPayment}
+                  disabled={loading}
+                  className="w-full bg-success hover:opacity-90 text-white disabled:opacity-50"
+                >
+                  {loading ? "Confirming..." : "I Have Paid - Confirm Payment"}
+                </Button>
+              </div>
+            ) : (
+              <div className="bg-success bg-opacity-10 border border-success p-4 rounded-lg">
+                <p className="text-success font-medium">Payment Confirmed</p>
+                <p className="text-sm text-text-secondary mt-2">
+                  Your booking is confirmed. Please arrive 10 minutes early.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {booking.status === "pending-payment" && (
+          <div className="mt-8 pt-8 border-t border-border">
+            <h3 className="text-lg font-semibold mb-4">Reschedule Booking</h3>
+            {!showReschedule ? (
+              <Button onClick={handleShowReschedule} className="btn-secondary">
+                Reschedule to Different Date
+              </Button>
+            ) : (
+              <div className="space-y-4 max-w-md">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Select New Date
+                  </label>
+                  <select
+                    value={selectedDate}
+                    onChange={(e) => handleDateSelect(e.target.value)}
+                    className="input-base"
+                  >
+                    <option value="">Choose a date</option>
+                    {availableDates.map((date) => (
+                      <option key={date} value={date}>
+                        {date}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {selectedDate && availableSlots.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Select Time Slot
+                    </label>
+                    <select
+                      value={selectedTime}
+                      onChange={(e) => setSelectedTime(e.target.value)}
+                      className="input-base"
+                    >
+                      <option value="">Choose a time</option>
+                      {availableSlots.map((slot) => (
+                        <option key={slot} value={slot}>
+                          {slot}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleReschedule}
+                    disabled={!selectedDate || !selectedTime}
+                    className="flex-1 bg-accent hover:bg-accent-light text-white disabled:opacity-50"
+                  >
+                    Confirm Reschedule
+                  </Button>
+                  <Button
+                    onClick={() => setShowReschedule(false)}
+                    className="btn-secondary"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+
+
+-bookings-list,
+
+"use client";
+
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+const mockBookings = [
+  {
+    id: 1,
+    clinic: "TB Wing A - Nairobi Central Hospital",
+    date: "2024-12-05",
+    time: "10:00 - 11:00",
+    status: "pending-payment",
+    amount: 50,
+    expiresAt: "2024-12-05 10:00",
+    daysLeft: 2,
+  },
+  {
+    id: 2,
+    clinic: "TB Wing B - Mombasa County Hospital",
+    date: "2024-12-12",
+    time: "14:00 - 15:00",
+    status: "confirmed",
+    amount: 50,
+    expiresAt: null,
+  },
+];
+
+interface BookingsListProps {
+  onSelectBooking: (booking: any) => void;
+}
+
+export default function BookingsList({ onSelectBooking }: BookingsListProps) {
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold text-primary mb-6">Your Bookings</h2>
+
+      {mockBookings.map((booking) => (
+        <Card
+          key={booking.id}
+          className="p-6 hover:shadow-lg transition-shadow"
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h3 className="text-xl font-semibold mb-2">{booking.clinic}</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div>
+                  <p className="text-sm text-text-secondary">Date & Time</p>
+                  <p className="font-medium">
+                    {booking.date} {booking.time}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-text-secondary">Amount</p>
+                  <p className="font-medium">KSH {booking.amount}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-text-secondary">Status</p>
+                  <p
+                    className={`font-medium ${
+                      booking.status === "pending-payment"
+                        ? "text-warning"
+                        : booking.status === "confirmed"
+                          ? "text-success"
+                          : "text-error"
+                    }`}
+                  >
+                    {booking.status === "pending-payment"
+                      ? "Pending Payment"
+                      : "Confirmed"}
+                  </p>
+                </div>
+                {booking.daysLeft && (
+                  <div>
+                    <p className="text-sm text-text-secondary">Expires In</p>
+                    <p className="font-medium text-warning">
+                      {booking.daysLeft} days
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+            <Button
+              onClick={() => onSelectBooking(booking)}
+              className="bg-accent hover:bg-accent-light text-white ml-4"
+            >
+              Manage
+            </Button>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+
+
+-dashboard,
+
+"use client";
+
+import { useState, useEffect } from "react";
+import NotificationBell from "../notifications/notification-bell";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import BookingsList from "./bookings-list";
+import BookingDetails from "./booking-details";
+import { checkAndSendReminders } from "../../lib/reminders";
+
+interface PatientDashboardProps {
+  user: any;
+  token: string;
+  onLogout: () => void;
+}
+
+export default function PatientDashboard({
+  user,
+  token,
+  onLogout,
+}: PatientDashboardProps) {
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+
+  useEffect(() => {
+    // Check reminders immediately on load
+    checkAndSendReminders(user?.id);
+
+    // Set up interval to check reminders every minute
+    const reminderInterval = setInterval(() => {
+      checkAndSendReminders(user?.id);
+    }, 60000); // Check every minute
+
+    return () => clearInterval(reminderInterval);
+  }, [user?.id]);
+
+  return (
+    <div className="bg-surface">
+      {/* Header */}
+      <header className="bg-accent text-white py-6 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Uzimacare - Patient Portal</h1>
+            <p className="text-teal-100">Welcome, {user?.fullName}</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <NotificationBell userId={user?.id} />
+            <Button
+              onClick={onLogout}
+              className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white"
+            >
+              Logout
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Section */}
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold text-accent mb-2">
+              Upcoming Bookings
+            </h3>
+            <p className="text-4xl font-bold">2</p>
+          </Card>
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold text-accent mb-2">
+              Pending Payment
+            </h3>
+            <p className="text-4xl font-bold">1</p>
+          </Card>
+        </div>
+
+        {/* Bookings Section */}
+        {!selectedBooking ? (
+          <BookingsList onSelectBooking={setSelectedBooking} />
+        ) : (
+          <BookingDetails
+            booking={selectedBooking}
+            onBack={() => setSelectedBooking(null)}
+          />
+        )}
+      </main>
+    </div>
+  );
+}
+
+
+
+
+
+
+
+components/physician:
+
+-completed-referrals,
+
+"use client";
+
+import { useState, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { db } from "../../lib/db";
+
+interface CompletedReferralsProps {
+  physician: any;
+  token: string;
+  onBack: () => void;
+}
+
+export default function CompletedReferralsPage({
+  physician,
+  token,
+  onBack,
+}: CompletedReferralsProps) {
+  const [selectedReferral, setSelectedReferral] = useState<any>(null);
+
+  const completedReferrals = useMemo(() => {
+    return Array.from(db.referrals.values()).filter(
+      (ref: any) =>
+        ref.physicianId === physician.id &&
+        (ref.status === "Completed" || ref.status === "confirmed" || ref.status === "paid" || ref.status === "completed"),
+    );
+  }, [physician.id]);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-primary">
+            Completed Referrals
+          </h1>
+          <Button onClick={onBack} variant="outline">
+            Back to Dashboard
+          </Button>
+        </div>
+
+        {completedReferrals.length === 0 ? (
+          <Card className="p-8 text-center">
+            <p className="text-text-secondary text-lg">
+              No completed referrals yet
+            </p>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {completedReferrals.map((referral: any) => (
+              <Card
+                key={referral.id}
+                className="p-6 cursor-pointer hover:shadow-lg transition-all border-l-4 border-green-500"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-grow">
+                    <h3 className="text-lg font-bold text-primary mb-2">
+                      {referral.patientName}
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-text-secondary">Referring Doctor</p>
+                        <p className="font-medium">{physician.fullName}</p>
+                      </div>
+                      <div>
+                        <p className="text-text-secondary">
+                          Receiving Facility
+                        </p>
+                        <p className="font-medium">
+                          {referral.receivingFacility}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-text-secondary">Date Sent</p>
+                        <p className="font-medium">
+                          {new Date(referral.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      {referral.completedAt && (
+                        <div>
+                          <p className="text-text-secondary">Date Completed</p>
+                          <p className="font-medium">
+                            {new Date(
+                              referral.completedAt,
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right ml-4">
+                    <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                      {referral.status === 'paid' ? 'Paid' : 'Completed'}
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setSelectedReferral(referral)}
+                  className="mt-4 bg-green-500 hover:bg-green-600 text-white"
+                >
+                  View Full Details
+                </Button>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {selectedReferral && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <Card className="w-full max-w-2xl p-8 max-h-screen overflow-y-auto">
+              <div className="flex justify-between items-start mb-6">
+                <h2 className="text-2xl font-bold text-primary">
+                  Referral Details
+                </h2>
+                <button
+                  onClick={() => setSelectedReferral(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-primary mb-3">
+                    Patient Information
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-text-secondary">
+                        Patient Name
+                      </p>
+                      <p className="font-medium">
+                        {selectedReferral.patientName}
+                      </p>
+                    </div>
+                    {selectedReferral.patientId && (
+                      <div>
+                        <p className="text-sm text-text-secondary">
+                          Patient ID
+                        </p>
+                        <p className="font-medium">
+                          {selectedReferral.patientId}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-primary mb-3">
+                    Medical History
+                  </h3>
+                  <p className="text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg">
+                    {selectedReferral.medicalHistory}
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-primary mb-3">
+                    Test Results
+                  </h3>
+                  <p className="text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg">
+                    {selectedReferral.labResults}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-primary mb-3">
+                    Reason for Referral
+                  </h3>
+                  <p className="text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg">
+                    {selectedReferral.diagnosis}
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-primary mb-3">
+                    Referral Status
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-text-secondary">
+                        Receiving Facility
+                      </p>
+                      <p className="font-medium">
+                        {selectedReferral.receivingFacility}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-text-secondary">Status</p>
+                      <p className="font-medium text-green-600">Completed</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-text-secondary">Date Sent</p>
+                      <p className="font-medium">
+                        {new Date(
+                          selectedReferral.createdAt,
+                        ).toLocaleDateString()}
+                      </p>
+                    </div>
+                    {selectedReferral.completedAt && (
+                      <div>
+                        <p className="text-sm text-text-secondary">
+                          Date Completed
+                        </p>
+                        <p className="font-medium">
+                          {new Date(
+                            selectedReferral.completedAt,
+                          ).toLocaleDateString()}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t">
+                  <Button
+                    onClick={() => setSelectedReferral(null)}
+                    className="w-full bg-gray-500 hover:bg-gray-600 text-white"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
+-create-referral,
+
+"use client";
+
+import type React from "react";
+
+import { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { db } from "../../lib/db";
+
+interface CreateReferralProps {
+  physician: any;
+  token: string;
+  onBack: () => void;
+}
+
+export default function CreateReferralPage({
+  physician,
+  token,
+  onBack,
+}: CreateReferralProps) {
+  const [formData, setFormData] = useState({
+    patientName: "",
+    patientId: "",
+    medicalHistory: "",
+    labResults: "",
+    diagnosis: [] as string[],
+    referringHospital: physician.hospital,
+    receivingFacility: "",
+    priority: "Routine" as "Routine" | "Urgent" | "Emergency",
+  });
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [importFileName, setImportFileName] = useState<string | null>(null);
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportFileName(file.name);
+
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
+    const text = await file.text();
+
+    try {
+      let parsed = "";
+      if (ext === "json") {
+        const j = JSON.parse(text);
+        if (typeof j === "string") parsed = j;
+        else if (j && typeof j.medicalHistory === "string") parsed = j.medicalHistory;
+        else parsed = JSON.stringify(j, null, 2);
+      } else if (ext === "csv") {
+        // crude csv: take first non-header row, first column
+        const rows = text.split(/\r?\n/).filter(Boolean);
+        if (rows.length > 0) {
+          const cols = rows[0].split(",");
+          parsed = cols[0] || rows[0];
+        } else parsed = text;
+      } else {
+        // txt, md or other text formats
+        parsed = text;
+      }
+
+      setFormData((prev) => ({ ...prev, medicalHistory: parsed }));
+    } catch (err) {
+      alert("Failed to import file: " + String(err));
+    }
+  };
+
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const mockHospitals = [
+    "Machakos Referral Hospital",
+    "Kenyatta National Hospital (KNH)",
+    "Mbagathi Hospital",
+    "Memorial Hospital Armed Forces",
+    "Mombasa County Hospital",
+    "Kisumu District Hospital",
+    "Nakuru Teaching Hospital",
+  ];
+
+  const diseases = [
+    "malignant hypertension",
+    "diabetic retinopathy",
+    "diabetic nephropathy",
+    "twin pregnancy",
+    "gestational hypertension",
+    "heart failure",
+    "pulmonary hypertension",
+    "syncope of unknown reason",
+    "stroke",
+    "parkinsons",
+    "cerebral palsy",
+    "peripheral neuropathy",
+    "myasthenia gravis",
+    // additional conditions requested
+    "epilepsy",
+    "multiple sclerosis",
+    "poorly controlled diabetes",
+    "pediatric diabetes",
+    "goitre",
+    "hyperthyroidism",
+    "hypothyroidism",
+    "cushings syndrome",
+    "other endocrinology condition",
+    "other neurologic condition",
+    "fractures",
+    "chronic obstructive pulmonary disease",
+    "drug resistant tuberculosis (TB)",
+    "severe asthma",
+    "malignancy (cancer)",
+    "possible liver cirrhosis",
+    "gastroesophageal reflux disease",
+    "peptic ulcer disease",
+    "possible gastric cancer",
+    "human immunodeficiency virus (AIDS)(HIV)",
+    "chronic diarrhoea",
+    "upper gastrointestinal bleeding (UGIB)",
+    "lower gastrointestinal disease (LGIB)",
+    "chronic kidney disease (dialysis)",
+    "acute kidney failure",
+    "Gum scrubbing",
+    "nephrotic syndrome",
+    "neurofibromatosis",
+    "rheumatoid arthritis",
+    "systemic lupus erythematosus",
+    "gout refractory",
+    "unexplained anemia",
+    "leukemia",
+    "lymphoma",
+    "unexplained thrombophilia",
+    "unexplained neutropenia",
+    "multiple myeloma",
+    "psychiatric illness",
+    "major depressive disorder",
+    "bipolar disorder",
+    "substance use disorder",
+    "endometriosis",
+    "infertility",
+    "erectile deficiency",
+    "possible prostate cancer",
+    "urinary incontinence",
+    "chronic urinary retention",
+    "kidney stones",
+    "pyelonephritis",
+    "severe dermatology condition",
+    "chronic skin ulcers",
+    "chronic pain",
+    "chronic back pain",
+    "chronic abdominal pain",
+    "fibroids",
+    // newly requested conditions
+    "meningitis",
+    "hydrocephalus",
+    "head trauma",
+    "unexplained bone pain",
+    "encephalitis",
+    "measles",
+    "scarlet fever",
+    "pemphigus",
+    "complicated malaria",
+    "chronic cough",
+    "chronic conjunctivitis",
+    "keratoconjunctivitis",
+    "hepatitis",
+  ];
+
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const toggleDiagnosis = (d: string) => {
+    const dU = d.toUpperCase();
+    const cur = Array.isArray(formData.diagnosis) ? [...formData.diagnosis] : [];
+    if (cur.includes(dU)) {
+      setFormData((prev) => ({
+        ...prev,
+        diagnosis: Array.isArray(prev.diagnosis) ? prev.diagnosis.filter((x) => x !== dU) : [],
+      }));
+      return;
+    }
+    if (cur.length >= 2) {
+      alert("You can select up to 2 conditions");
+      return;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      diagnosis: Array.isArray(prev.diagnosis) ? [...prev.diagnosis, dU] : [dU],
+    }));
+    // clear typed letters and hide the dropdown after a selection
+    setSearchTerm("");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    // Basic validation for required fields when submitting via JS
+    const selectedReasons = (formData as any).diagnosis;
+    const hasReason = Array.isArray(selectedReasons)
+      ? selectedReasons.length > 0
+      : !!selectedReasons;
+    if (!formData.patientName || !(formData as any).labResults || !hasReason) {
+      setLoading(false);
+      alert("Please fill required fields: Patient name, Lab results, and Reason for Referral.");
+      return;
+    }
+
+    try {
+      // Helper: generate 6-char alphanumeric token
+      const generateToken = (length = 6) => {
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let out = "";
+        for (let i = 0; i < length; i++) {
+          out += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return out;
+      };
+
+      // Reuse token if there's already a pending referral for the same patientId
+      let token: string | undefined;
+      const patientId = formData.patientId?.trim();
+      if (patientId) {
+        const existing = Array.from(db.referrals.values()).find((r: any) =>
+          r.patientId && r.patientId === patientId &&
+          (r.status === "pending-admin" || r.status === "Pending Admin Approval"),
+        );
+        if (existing) {
+          token = existing.referralToken || existing.token || undefined;
+          if (!token) {
+            token = generateToken();
+            existing.referralToken = token;
+            db.referrals.set(existing.id, existing);
+          }
+        }
+      }
+
+      // Create referral
+      const referralId = `ref-${Date.now()}`;
+      const referral = {
+        id: referralId,
+        physicianId: physician.id,
+        patientName: formData.patientName,
+        patientId: formData.patientId || undefined,
+        medicalHistory: formData.medicalHistory,
+        labResults: formData.labResults,
+        diagnosis: Array.isArray(formData.diagnosis)
+          ? (formData.diagnosis as string[]).join("; ")
+          : formData.diagnosis,
+        referringHospital: formData.referringHospital,
+        receivingFacility: formData.receivingFacility,
+        priority: formData.priority,
+        status: "pending-admin" as const,
+        referralToken: token || generateToken(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      db.referrals.set(referralId, referral);
+      // Notify other parts of the app (admin view) that a new referral was created
+      try {
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("referral:created", { detail: referral }),
+          );
+        }
+      } catch (e) {
+        // ignore
+      }
+      setSuccess(true);
+
+      setTimeout(() => {
+        setFormData({
+            patientName: "",
+            patientId: "",
+            medicalHistory: "",
+            labResults: "",
+            diagnosis: [],
+            referringHospital: physician.hospital,
+            receivingFacility: "",
+            priority: "Routine",
+          });
+        setSuccess(false);
+      }, 2000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-primary">
+            Create Patient Referral
+          </h1>
+          <Button onClick={onBack} variant="outline">
+            Back to Dashboard
+          </Button>
+        </div>
+
+        <Card className="p-8 shadow-lg">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Patient Information */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold text-primary">
+                Patient Information
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">
+                    Patient Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="patientName"
+                    value={formData.patientName}
+                    onChange={handleChange}
+                    required
+                    placeholder="Enter patient full name"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">
+                    Patient ID/MRN
+                  </label>
+                  <input
+                    type="text"
+                    name="patientId"
+                    value={formData.patientId}
+                    onChange={handleChange}
+                    placeholder="Optional"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Medical Information */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold text-primary">
+                Medical Information
+              </h2>
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">
+                  Patient Medical History *
+                </label>
+                <div className="flex gap-2 items-start">
+                  <textarea
+                    name="medicalHistory"
+                    value={formData.medicalHistory}
+                    onChange={handleChange}
+                    required
+                    placeholder="Include current symptoms, patient condition, and relevant medical history"
+                    rows={5}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <div className="flex flex-col gap-2 ml-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".txt,.md,.json,.csv"
+                      className="hidden"
+                      onChange={handleFileImport}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleImportClick}
+                      className="px-3 py-2 bg-surface border border-border rounded text-sm text-text-primary hover:bg-background"
+                    >
+                      Import
+                    </button>
+                    {importFileName && (
+                      <div className="text-xs text-text-secondary max-w-xs">
+                        {importFileName}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">
+                    Lab Results *
+                  </label>
+                  <textarea
+                    name="labResults"
+                    value={(formData as any).labResults}
+                    onChange={handleChange}
+                    required
+                    placeholder="Enter lab/test results (e.g., X-ray, sputum)"
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">
+                    Reason for Referral *
+                  </label>
+                  <div className="w-full">
+                    <div className="border border-gray-200 rounded bg-white">
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="type the condition"
+                        className="w-full px-3 py-2 text-sm focus:outline-none"
+                        disabled={Array.isArray(formData.diagnosis) && formData.diagnosis.length >= 2}
+                      />
+                      {searchTerm.trim().length > 0 && (
+                        <div className="max-h-40 overflow-y-auto">
+                          <ul className="divide-y">
+                            {diseases
+                              .filter((d) =>
+                                d.toLowerCase().includes(searchTerm.toLowerCase()),
+                              )
+                              .map((d) => (
+                                <li
+                                  key={d}
+                                  onClick={() => toggleDiagnosis(d)}
+                                  className={`p-2 cursor-pointer text-sm ${
+                                    Array.isArray((formData as any).diagnosis) &&
+                                    (formData as any).diagnosis.includes(d.toUpperCase())
+                                      ? "bg-blue-50 font-semibold"
+                                      : "hover:bg-gray-50"
+                                  }`}
+                                >
+                                  {d.toUpperCase()}
+                                </li>
+                              ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      type="hidden"
+                      name="diagnosis"
+                      value={Array.isArray((formData as any).diagnosis) ? (formData as any).diagnosis.join('; ') : (formData as any).diagnosis}
+                    />
+                    <div className="mt-2">
+                      {Array.isArray((formData as any).diagnosis) && (formData as any).diagnosis.length > 0 ? (
+                        <div className="flex gap-2 flex-wrap">
+                          {(formData as any).diagnosis.map((d: string) => (
+                            <button
+                              key={d}
+                              type="button"
+                              onClick={() => toggleDiagnosis(d)}
+                              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-sm text-primary border"
+                            >
+                              <span>{d}</span>
+                              <span className="text-xs text-gray-500">✕</span>
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-text-secondary">Selected: None</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Referral Details */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold text-primary">
+                Referral Details
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">
+                    Referring Hospital *
+                  </label>
+                  <input
+                    type="text"
+                    name="referringHospital"
+                    value={formData.referringHospital}
+                    onChange={handleChange}
+                    disabled
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">
+                    Receiving Facility *
+                  </label>
+                  <select
+                    name="receivingFacility"
+                    value={formData.receivingFacility}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select receiving facility</option>
+                    {mockHospitals.map((hospital) => (
+                      <option key={hospital} value={hospital}>
+                        {hospital}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">
+                  Referral Priority *
+                </label>
+                <div className="flex gap-4">
+                  {["Routine", "Urgent", "Emergency"].map((p) => (
+                    <label key={p} className="flex items-center">
+                      <input
+                        type="radio"
+                        name="priority"
+                        value={p}
+                        checked={formData.priority === p}
+                        onChange={handleChange}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">{p}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {success && (
+              <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
+                Referral created successfully! Awaiting administration approval.
+              </div>
+            )}
+
+            <div className="flex gap-4 justify-end pt-4">
+              <Button onClick={onBack} variant="outline">
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-blue-500 hover:bg-blue-600 text-white"
+                disabled={loading}
+              >
+                {loading ? "Creating..." : "Create Referral"}
+              </Button>
+            </div>
+          </form>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+
+
+-dashboard
+
+"use client";
+
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import CreateReferralPage from "./create-referral";
+import PendingReferralsPage from "./pending-referrals";
+import CompletedReferralsPage from "./completed-referrals";
+
+interface PhysicianDashboardProps {
+  user: any;
+  token: string;
+  onLogout: () => void;
+}
+
+type PhysicianPage = "dashboard" | "create" | "pending" | "completed";
+
+export default function PhysicianDashboard({
+  user,
+  token,
+  onLogout,
+}: PhysicianDashboardProps) {
+  const [currentPage, setCurrentPage] = useState<PhysicianPage>("dashboard");
+
+  if (currentPage === "create") {
+    return (
+      <CreateReferralPage
+        physician={user}
+        token={token}
+        onBack={() => setCurrentPage("dashboard")}
+      />
+    );
+  }
+
+  if (currentPage === "pending") {
+    return (
+      <PendingReferralsPage
+        physician={user}
+        token={token}
+        onBack={() => setCurrentPage("dashboard")}
+      />
+    );
+  }
+
+  if (currentPage === "completed") {
+    return (
+      <CompletedReferralsPage
+        physician={user}
+        token={token}
+        onBack={() => setCurrentPage("dashboard")}
+      />
+    );
+  }
+
+  return (
+    <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-primary mb-2">
+              Physician Portal
+            </h1>
+            <p className="text-lg text-text-secondary">
+              {(() => {
+                const raw = String(user?.fullName || "");
+                const name = raw.replace(/^Dr\.?\s*/i, "");
+                return `Welcome, Dr. ${name}`;
+              })()}
+            </p>
+            <p className="text-sm text-text-secondary">{user.hospital}</p>
+          </div>
+          <Button onClick={onLogout} variant="outline" className="bg-white">
+            Logout
+          </Button>
+        </div>
+
+        {/* Dashboard Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Create New Referral */}
+          <Card
+            className="p-6 cursor-pointer hover:shadow-lg transition-all border-2 border-transparent hover:border-blue-500"
+            onClick={() => setCurrentPage("create")}
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mb-4">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-2">Create New Referral</h3>
+              <p className="text-text-secondary mb-4 flex-grow">
+                Send patient referral to another facility
+              </p>
+              <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white">
+                Create
+              </Button>
+            </div>
+          </Card>
+
+          {/* Pending Referrals */}
+          <Card
+            className="p-6 cursor-pointer hover:shadow-lg transition-all border-2 border-transparent hover:border-yellow-500"
+            onClick={() => setCurrentPage("pending")}
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center mb-4">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-2">Pending Referrals</h3>
+              <p className="text-text-secondary mb-4 flex-grow">
+                Awaiting administration approval and forwarding
+              </p>
+              <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white">
+                View
+              </Button>
+            </div>
+          </Card>
+
+          {/* Completed Referrals */}
+          <Card
+            className="p-6 cursor-pointer hover:shadow-lg transition-all border-2 border-transparent hover:border-green-500"
+            onClick={() => setCurrentPage("completed")}
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-4">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-2">Completed Referrals</h3>
+              <p className="text-text-secondary mb-4 flex-grow">
+                Successfully delivered to receiving facilities
+              </p>
+              <Button className="w-full bg-green-500 hover:bg-green-600 text-white">
+                View
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+-pending-referrals
+
+"use client";
+
+import { useState, useMemo, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { db } from "../../lib/db";
+
+interface PendingReferralsProps {
+  physician: any;
+  token: string;
+  onBack: () => void;
+}
+
+export default function PendingReferralsPage({
+  physician,
+  token,
+  onBack,
+}: PendingReferralsProps) {
+  const [selectedReferral, setSelectedReferral] = useState<any>(null);
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    const handler = () => setTick((t) => t + 1);
+    if (typeof window !== "undefined") {
+      window.addEventListener("referral:created", handler as EventListener);
+      window.addEventListener("referral:completed", handler as EventListener);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("referral:created", handler as EventListener);
+        window.removeEventListener("referral:completed", handler as EventListener);
+      }
+    };
+  }, []);
+
+  const pendingReferrals = useMemo(() => {
+    return Array.from(db.referrals.values()).filter(
+      (ref: any) => {
+        if (ref.physicianId !== physician.id) return false;
+        const s = (ref.status || "").toString().toLowerCase();
+        return (
+          s === "pending-admin" ||
+          s === "pending admin approval" ||
+          s === "pending-payment" ||
+          s === "awaiting-biodata" ||
+          s === "awaiting biodata"
+        );
+      },
+    );
+  }, [physician.id, tick]);
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "Routine":
+        return "bg-green-100 text-green-800";
+      case "Urgent":
+        return "bg-yellow-100 text-yellow-800";
+      case "Emergency":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-primary">Pending Referrals</h1>
+          <Button onClick={onBack} variant="outline">
+            Back to Dashboard
+          </Button>
+        </div>
+
+        {pendingReferrals.length === 0 ? (
+          <Card className="p-8 text-center">
+            <p className="text-text-secondary text-lg">No pending referrals</p>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {pendingReferrals.map((referral: any) => (
+              <Card
+                key={referral.id}
+                className="p-6 cursor-pointer hover:shadow-lg transition-all"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-grow">
+                    <h3 className="text-lg font-bold text-primary mb-2">
+                      {referral.patientName}
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-text-secondary">
+                          Referring Hospital
+                        </p>
+                        <p className="font-medium">
+                          {referral.referringHospital}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-text-secondary">
+                          Receiving Facility
+                        </p>
+                        <p className="font-medium">
+                          {referral.receivingFacility}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-text-secondary">Created</p>
+                        <p className="font-medium">
+                          {new Date(referral.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right ml-4">
+                    <span
+                      className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getPriorityColor(referral.priority)}`}
+                    >
+                      {referral.priority}
+                    </span>
+                    <p className="text-sm text-yellow-600 font-medium mt-2">
+                      Pending Administration Approval
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setSelectedReferral(referral)}
+                  className="mt-4 bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  View Details
+                </Button>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {selectedReferral && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <Card className="w-full max-w-2xl p-8 max-h-screen overflow-y-auto">
+              <div className="flex justify-between items-start mb-6">
+                <h2 className="text-2xl font-bold text-primary">
+                  Referral Details
+                </h2>
+                <button
+                  onClick={() => setSelectedReferral(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-primary mb-3">
+                    Patient Information
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-text-secondary">
+                        Patient Name
+                      </p>
+                      <p className="font-medium">
+                        {selectedReferral.patientName}
+                      </p>
+                    </div>
+                    {selectedReferral.patientId && (
+                      <div>
+                        <p className="text-sm text-text-secondary">
+                          Patient ID
+                        </p>
+                        <p className="font-medium">
+                          {selectedReferral.patientId}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-primary mb-3">
+                    Medical History
+                  </h3>
+                  <p className="text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg">
+                    {selectedReferral.medicalHistory}
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-primary mb-3">
+                    Lab Results
+                  </h3>
+                  <p className="text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg">
+                    {selectedReferral.labResults}
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-primary mb-3">
+                    Reason for Referral
+                  </h3>
+                  <p className="text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg">
+                    {selectedReferral.diagnosis}
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-primary mb-3">
+                    Referral Metadata
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-text-secondary">
+                        Referring Hospital
+                      </p>
+                      <p className="font-medium">
+                        {selectedReferral.referringHospital}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-text-secondary">
+                        Receiving Facility
+                      </p>
+                      <p className="font-medium">
+                        {selectedReferral.receivingFacility}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-text-secondary">Priority</p>
+                      <p className="font-medium">{selectedReferral.priority}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-text-secondary">Status</p>
+                      <p className="font-medium text-yellow-600">
+                        {selectedReferral.status}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t">
+                  <Button
+                    onClick={() => setSelectedReferral(null)}
+                    className="w-full bg-gray-500 hover:bg-gray-600 text-white"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
+components/ui
+
+-button.tsx:
+
+import * as React from "react";
+import { cn } from "@/lib/utils";
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+  size?: "default" | "sm" | "lg" | "icon";
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = "default", size = "default", ...props }, ref) => {
+    return (
+      <button
+        className={cn(
+          "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+          {
+            "bg-primary text-primary-foreground hover:bg-primary/90":
+              variant === "default",
+            "bg-destructive text-destructive-foreground hover:bg-destructive/90":
+              variant === "destructive",
+            "border border-input bg-background hover:bg-accent hover:text-accent-foreground":
+              variant === "outline",
+            "bg-secondary text-secondary-foreground hover:bg-secondary/80":
+              variant === "secondary",
+            "hover:bg-accent hover:text-accent-foreground": variant === "ghost",
+            "text-primary underline-offset-4 hover:underline": variant === "link",
+          },
+          {
+            "h-10 px-4 py-2": size === "default",
+            "h-9 rounded-md px-3": size === "sm",
+            "h-11 rounded-md px-8": size === "lg",
+            "h-10 w-10": size === "icon",
+          },
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    );
+  }
+);
+Button.displayName = "Button";
+
+export { Button };
+
+
+
+-card
+
+import * as React from "react";
+import { cn } from "@/lib/utils";
+
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-lg border bg-card text-card-foreground shadow-sm",
+      className
+    )}
+    {...props}
+  />
+));
+Card.displayName = "Card";
+
+export { Card };
+
+
+
+
+
+
+
+
+
